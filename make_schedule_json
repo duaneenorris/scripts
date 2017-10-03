@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import json
+import time
+import sys
+from argparse import ArgumentParser
+
+def get_time( string ):
+    now = time.gmtime()
+    new = time.strptime( string, "%H:%M" )
+    target_time = [ now.tm_year, now.tm_mon, now.tm_mday, new.tm_hour, new.tm_min, \
+                    now.tm_sec, now.tm_wday, now.tm_yday, now.tm_isdst ]
+
+    return time.mktime( target_time )
+
+def expand_day( list1 ):
+    list2 = []
+    lookup = { "M":"Monday", 
+               "T":"Tuesday", 
+               "W":"Wednesday", 
+               "R":"Thursday", 
+               "F":"Friday",
+               "S":"Saturday",
+               "U":"Sunday"}
+    for d in list1 :
+        list2.append( lookup[ d ] )
+
+    return list2
+
+if __name__ == "__main__":
+
+    description =  """\nCreate json for scheduling plays.\nInputs are given in local time.\nOutputs are given in GMT."""
+    argv_parser = ArgumentParser(description = description)
+    argv_parser.add_argument("-s", "--start", help="The start time (HH:MM)", default=time.strftime("%H:%M",time.gmtime()))
+    argv_parser.add_argument("-e", "--end", help="The end time (HH:MM)")
+    argv_parser.add_argument("-d", "--duration", help="How long to schedule.(min)", default=60)
+    argv_parser.add_argument("-i", "--interval", help="Interval in minutes.", default=15)
+    argv_parser.add_argument("-t", "--type", help="once, daily, or weekly", default="daily", choices=["once", "daily", "weekly"])
+    argv_parser.add_argument("-D", "--day", help="Which days? specify for each day", choices=["M", "T", "W", "R", "F", "S", "U"], action="append")
+    args = argv_parser.parse_args()
+
+    sch = {}
+    sch["type"] = args.type
+    times = []
+    if args.type == "once" :
+        times.append( time.strftime( "%Y-%m-%dT%H:%M:%SZ", time.gmtime(get_time(args.start)) ))
+    else :
+        now = get_time(args.start)
+        interval = int(args.interval)*60
+        duration = int(args.duration)*60
+        if args.end != None :
+            duration = int(get_time( args.end ) - now )
+        if args.day == None :
+            sch["days"] = ["Monday"]
+        else :
+            sch["days"] = expand_day( args.day )
+
+        for t in range( int(now), int(now) + duration ):
+            if ((t-int(now))%(interval)==0) :
+                times.append( time.strftime("%H:%M-0000", time.gmtime(t)))
+
+    sch["times"] = times
+    
+    #print( str(sch))
+    print json.dumps( sch, sort_keys=True, indent=4, separators=(',',': ') )
