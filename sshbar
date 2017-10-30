@@ -10,7 +10,9 @@
 # sshbar 3
 #     ssh to bar@bar3
 # sshbar -v 3
-#     ssh to bar@10.10.32.103
+#     ssh to bar@10.210.232.103
+# sshbar -a 3
+#     ssh to bar@172.210.220.103
 # sshbar 10.10.39.209
 #     ssh to bar@10.10.39.209
 
@@ -31,18 +33,50 @@ function valid_ip()
     return $stat
 }
 
+function usage() {
+    echo "Usage:  sshbar [-v][-a][-h] <n>"
+    echo " -v Use VPN IP address instead of name (10.210.232.103 instead of bar3)"
+    echo " -a Use AWS VPN IP address instead of name (172.210.220.103 instead of bar3)"
+    echo " -h Display this help message"
+    echo " n = bar<n> or IP address"
+    echo " Examples:"
+    echo " sshbar 3"
+    echo "     ssh to bar@bar3"
+    echo " sshbar -v 3"
+    echo "     ssh to bar@10.210.232.103"
+    echo " sshbar -a 3"
+    echo "     ssh to bar@172.210.220.103"
+    echo " sshbar 10.10.39.209"
+    echo "     ssh to bar@10.10.39.209"
+    exit 1
+}
+
+
 vpn=0
-while getopts ":v" opt; do
+avpn=0
+while getopts ":vah" opt; do
   case $opt in
     v)
         vpn=1
         shift $((OPTIND-1))
       ;;
+    a)
+        avpn=1
+        shift $((OPTIND-1))
+      ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+        echo "Invalid option: -$OPTARG" >&2
+        usage
+      ;;
+    h)
+      usage
       ;;
   esac
 done
+
+if [ -z "$1" ] ; then
+    usage
+fi
 
 host="${@: -1}"
 if valid_ip ${@: -1}; then
@@ -50,6 +84,8 @@ if valid_ip ${@: -1}; then
 elif [[ ${host} =~ ^[0-9]+$ ]]; then
     if [ $vpn -eq 1 ] ; then
         host=10.210.232.$((100+$host));
+    elif [ $avpn -eq 1 ] ; then
+        host=172.210.220.$((100+$host));
     else host=bar${host};
     fi
 fi
