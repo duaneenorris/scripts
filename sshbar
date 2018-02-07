@@ -85,7 +85,7 @@ elif [[ ${host} =~ ^[0-9]+$ ]]; then
     if [ $vpn -eq 1 ] ; then
         host=10.210.232.$((100+$host));
     elif [ $avpn -eq 1 ] ; then
-        host=172.210.220.$((100+$host));
+        host=172.21.220.$((100+$host));
     else host=bar${host};
     fi
 fi
