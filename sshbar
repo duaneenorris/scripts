@@ -46,6 +46,8 @@ function usage() {
     echo "     ssh to bar@10.210.232.103"
     echo " sshbar -a 3"
     echo "     ssh to bar@172.210.220.103"
+    echo " sshbar -p 3"
+    echo "     ssh -p2222 to bar@10.210.232.103"
     echo " sshbar 10.10.39.209"
     echo "     ssh to bar@10.10.39.209"
     exit 1
@@ -54,7 +56,8 @@ function usage() {
 
 vpn=0
 avpn=0
-while getopts ":vah" opt; do
+prod=0
+while getopts ":vahp" opt; do
   case $opt in
     v)
         vpn=1
@@ -62,6 +65,10 @@ while getopts ":vah" opt; do
       ;;
     a)
         avpn=1
+        shift $((OPTIND-1))
+      ;;
+    p)
+        prod=1
         shift $((OPTIND-1))
       ;;
     \?)
@@ -95,11 +102,15 @@ id_file=~/.ssh/id_rsa-$(hostname)-github
 git_email=$(sed -n -e 's/^\s\+email\s\?=\s\?//p' < ~/.gituser)
 git_name=$(sed -n -e 's/^\s\+name\s\?=\s\?//p' < ~/.gituser | sed -e 's/\s/\\ /')
 
-exec ssh-agent -a $uds_addr ssh -X -t -A -l bar \
-    -o IdentityFile=$id_file -o AddKeysToAgent=yes -l bar ${host} \
-    GIT_AUTHOR_EMAIL="${git_email}" \
-    GIT_COMMITTER_EMAIL="${git_email}" \
-    GIT_AUTHOR_NAME="${git_name}" \
-    GIT_COMMITTER_NAME="${git_name}" \
-    EDITOR=emacs \
-    zsh -l
+if [ $prod -eq 1 ] ; then
+    ssh -p2222 bar@${host}
+else
+    exec ssh-agent -a $uds_addr ssh -X -t -A -l bar \
+        -o IdentityFile=$id_file -o AddKeysToAgent=yes -l bar ${host} \
+        GIT_AUTHOR_EMAIL="${git_email}" \
+        GIT_COMMITTER_EMAIL="${git_email}" \
+        GIT_AUTHOR_NAME="${git_name}" \
+        GIT_COMMITTER_NAME="${git_name}" \
+        EDITOR=emacs \
+        zsh -l;
+fi
