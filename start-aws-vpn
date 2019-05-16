@@ -1,1 +1,1 @@
-sudo openvpn --config ~/badger-vpn/duane-awsvpn.ovpn --auth-user-pass ~/badger-vpn/aws.up
+sudo openvpn --config ~/badger-vpn/duane-awsvpn.ovpn --auth-user-pass ~/badger-vpn/aws.up --inactive 300 20000
