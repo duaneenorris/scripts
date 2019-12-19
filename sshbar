@@ -35,21 +35,21 @@ function valid_ip()
 
 function usage() {
     echo "Usage:  sshbar [-v][-a][-h] <n>"
-    echo " -v Use VPN IP address instead of name (10.210.232.103 instead of bar3)"
-    echo " -a Use AWS VPN IP address instead of name (172.210.220.103 instead of bar3)"
     echo " -h Display this help message"
     echo " n = bar<n> or IP address"
     echo " Examples:"
     echo " sshbar 3"
-    echo "     ssh to bar@bar3"
+    echo "     ssh bar@bar3"
     echo " sshbar -v 3"
-    echo "     ssh to bar@10.210.232.103"
+    echo "     ssh bar@10.210.232.103"
     echo " sshbar -a 3"
-    echo "     ssh to bar@172.210.220.103"
+    echo "     ssh bar@172.210.220.103"
     echo " sshbar -p 3"
-    echo "     ssh -p2222 to bar@10.210.232.103"
+    echo "     ssh -p2222 bar@10.210.232.103"
+    echo " sshbar -s 3"
+    echo "     ssh -i /data/.secrets/barkey -p2222 bar@bar3"
     echo " sshbar 10.10.39.209"
-    echo "     ssh to bar@10.10.39.209"
+    echo "     ssh bar@10.10.39.209"
     exit 1
 }
 
@@ -57,7 +57,8 @@ function usage() {
 vpn=0
 avpn=0
 prod=0
-while getopts ":vahp" opt; do
+secret=''
+while getopts ":vahps" opt; do
   case $opt in
     v)
         vpn=1
@@ -69,6 +70,11 @@ while getopts ":vahp" opt; do
       ;;
     p)
         prod=1
+        shift $((OPTIND-1))
+      ;;
+    s)
+        prod=1
+        secret='-i /data/.secrets/barkey'
         shift $((OPTIND-1))
       ;;
     \?)
@@ -103,7 +109,7 @@ git_email=$(sed -n -e 's/^\s\+email\s\?=\s\?//p' < ~/.gituser)
 git_name=$(sed -n -e 's/^\s\+name\s\?=\s\?//p' < ~/.gituser | sed -e 's/\s/\\ /')
 
 if [ $prod -eq 1 ] ; then
-    ssh -p2222 bar@${host}
+    ssh ${secret} -p2222 bar@${host}
 else
     exec ssh-agent -a $uds_addr ssh -X -t -A -l bar \
         -o IdentityFile=$id_file -o AddKeysToAgent=yes -l bar ${host} \
