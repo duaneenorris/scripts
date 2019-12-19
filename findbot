@@ -1,0 +1,1 @@
+host -l badger-technologies.com | grep $1
