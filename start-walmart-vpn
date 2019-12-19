@@ -1,0 +1,1 @@
+sudo openvpn --config ~/badger-vpn/duane-walmart.ovpn --auth-user-pass ~/badger-vpn/walmart.up --inactive 300 20000

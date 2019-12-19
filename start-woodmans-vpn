@@ -1,0 +1,1 @@
+sudo openvpn --config ~/badger-vpn/duane-woodmans.ovpn --auth-user-pass ~/badger-vpn/woodmans.up --inactive 300 20000

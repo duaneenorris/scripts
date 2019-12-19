@@ -1,0 +1,1 @@
+sudo openvpn --config ~/badger-vpn/duane_delhaize.ovpn --auth-user-pass ~/badger-vpn/delhaize.up

@@ -1,0 +1,1 @@
+sudo openvpn --config ~/badger-vpn/duane-woolworths.ovpn --auth-user-pass ~/badger-vpn/woolworths.up --inactive 300 20000
