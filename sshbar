@@ -47,15 +47,26 @@ avpn=0
 prod=0
 payload=0
 secret=0
-while getopts ":hps" opt; do
+while getopts ":hpsS:" opt; do
   case $opt in
     p)
         payload=1
         shift $((OPTIND-1))
       ;;
+    S)
+        secret_path=$OPTARG
+        prod=1
+        secret=1
+        shift $((OPTIND-1))
+      ;;
     s)
         prod=1
         secret=1
+        if [ -z $SECRET_PATH ] ; then
+            secret_path=$SECRET_PATH
+        else
+            secret_path='/data'
+        fi
         shift $((OPTIND-1))
       ;;
     \?)
@@ -80,7 +91,7 @@ elif [[ ${host} =~ ^[0-9]+$ ]]; then
 fi
 
 if [ $secret -eq 1 ] ; then
-    id_file=/data/.secrets/barkey
+    id_file=${secret_path}/.secrets/barkey
 else
     id_file=~/.ssh/id_rsa-$(hostname)-github
 fi
