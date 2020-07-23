@@ -22,11 +22,16 @@ function valid_ip()
 }
 
 function usage() {
-    echo "Usage:  sshbar [-sph] <n>"
+    echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] <n>"
+    echo ""
+    echo "Options:"
     echo " -h Display this help message"
-    echo " -s Use barkey for authentication"
+    echo " -d Use <path> for keys *see notes*"
+    echo " -s Use barkey for authentication (core; port 2222)"
+    echo " -k Use barkey for authentication (classic; port 22)"
     echo " -p login to payload instead of truck (port 3022 or 3222)"
     echo " n = bar<n> or IP address"
+    echo ""
     echo " Examples:"
     echo " sshbar 672"
     echo "     ssh bar@bar672"
@@ -36,36 +41,72 @@ function usage() {
     echo "     ssh -i /data/.secrets/barkey -p3222 bar@bar672"
     echo " sshbar -s 672"
     echo "     ssh -i /data/.secrets/barkey -p2222 bar@bar672"
+    echo " sshbar -k 672"
+    echo "     ssh -i /data/.secrets/barkey -p22 bar@bar672"
+    echo " sshbar -kd /home/dnorris/.secrets 672"
+    echo "     ssh -i /home/dnorris/.secrets/barkey -p22 bar@bar672"
     echo " sshbar 10.10.39.209"
     echo "     ssh bar@10.10.39.209"
+    echo ""
+    echo "NOTE: 1. -s and -k options use the barkey for authentication."
+    echo "         when not specified, authentication uses"
+    echo "         id_rsa-<hostname>-github"
+    echo "      2. The defalt path is ~/.ssh when -s or -k are not specified."
+    echo "         If -s or -k are specified, the default path is /data/.secrets"
+    echo "      3. The env var SECRET_PATH will override the default for both cases."
     exit 1
 }
 
 
-vpn=0
-avpn=0
 prod=0
 payload=0
 secret=0
-while getopts ":hpsS:" opt; do
+dev=0
+user_path=0
+if [ -z $SECRET_PATH ] ; then
+    secret_path='~/.ssh'
+else
+    secret_path=$SECRET_PATH
+fi
+
+while getopts ":hpskd:" opt; do
   case $opt in
+    d)
+        user_path=1
+        secret_path=$OPTARG
+        shift $((OPTIND-1))
+      ;;
     p)
         payload=1
         shift $((OPTIND-1))
       ;;
-    S)
-        secret_path=$OPTARG
+    s)
+        if [ $dev -eq 1 ] ; then
+            usage
+        fi
         prod=1
         secret=1
+        if [ $user_path -ne 1 ] ; then
+          if [ -z $SECRET_PATH ] ; then
+              secret_path='/data/.secrets'
+          else
+              secret_path=$SECRET_PATH
+          fi
+        fi
         shift $((OPTIND-1))
       ;;
-    s)
-        prod=1
+    k)
+        if [ $prod -eq 1 ] ; then
+            usage
+        fi
+        dev=1
         secret=1
-        if [ -z $SECRET_PATH ] ; then
-            secret_path=$SECRET_PATH
-        else
-            secret_path='/data'
+        if [ $user_path -ne 1 ] ; then
+          if [ -z $SECRET_PATH ] ; then
+              secret_path='/data/.secrets'
+          else
+              secret_path=$SECRET_PATH
+          fi
         fi
         shift $((OPTIND-1))
       ;;
@@ -83,6 +124,8 @@ if [ -z "$1" ] ; then
     usage
 fi
 
+set -x
+
 host="${@: -1}"
 if valid_ip ${@: -1}; then
     host="${@: -1}"
@@ -90,10 +133,10 @@ elif [[ ${host} =~ ^[0-9]+$ ]]; then
     host=bar${host};
 fi
 
-if [ $secret -eq 1 ] ; then
-    id_file=${secret_path}/.secrets/barkey
+if [ $secret -eq 1 ] || [ $dev -eq 1 ] ; then
+    id_file=${secret_path}/barkey
 else
-    id_file=~/.ssh/id_rsa-$(hostname)-github
+    id_file=${secret_path}/id_rsa-$(hostname)-github
 fi
 
 zshell=0
@@ -104,12 +147,10 @@ if [ $prod -eq 1 ] ; then
     else
         port='2222'
     fi
-    # ssh ${secret} -p${port} bar@${host}
 elif [ $payload -eq 1 ] ; then
     port='3022'
     zshell=1
     xfor=1
-    # ssh ${secret} -t -p${port} bar@${host}
 else
     port='22'
     zshell=1
