@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ip_address=$(hostname -I | grep -Eom1 10.210.\(\[0-9\]\+\).\(\[0-9\]\+\))
+export ROS_HOSTNAME=$ip_address

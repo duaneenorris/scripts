@@ -124,8 +124,6 @@ if [ -z "$1" ] ; then
     usage
 fi
 
-set -x
-
 host="${@: -1}"
 if valid_ip ${@: -1}; then
     host="${@: -1}"
