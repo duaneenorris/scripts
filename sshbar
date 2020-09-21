@@ -178,5 +178,5 @@ exec ssh-agent -a $uds_addr ssh ${options} -p${port} -l bar \
     GIT_AUTHOR_NAME="${git_name}" \
     GIT_COMMITTER_NAME="${git_name}" \
     EDITOR=emacs \
-    TERM=xterm-256color \
+    TERM=screen-256color \
     ${shell} ;
