@@ -1,0 +1,33 @@
+#!/bin/bash
+
+function usage() {
+    echo "Usage:  start-<xxxx>-vpn [-i[timeout]]"
+    echo " -h Display this help message"
+    echo " -i inactive timeout default=300 sec"
+    exit 1
+}
+
+inactive=300
+vpn_name='badger'
+
+while getopts ":hi:v:" opt; do
+  case $opt in
+    i)
+        inactive=$OPTARG
+      ;;
+    v)
+        vpn_name=$OPTARG
+      ;;
+    \?)
+        echo "Invalid option: -$OPTARG" >&2
+        usage
+      ;;
+    h)
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+echo openvpn --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
+sudo openvpn --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
