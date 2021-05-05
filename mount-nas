@@ -1,1 +1,1 @@
-sudo mount -t cifs -o "username=duane,domain=btlnas01,password=Akisha9?" //10.210.232.31/share /data/nas/
+sudo mount -v -t cifs -o credentials=/home/duane/.secrets/nas-credentials.txt,vers=1.0 //10.210.232.31/share /data/nas
