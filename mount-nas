@@ -1,1 +1,6 @@
-sudo mount -v -t cifs -o credentials=/home/duane/.secrets/nas-credentials.txt,vers=1.0 //10.210.232.31/share /data/nas
+#!/bin/zsh
+
+nas_mount=$1
+[[ -z "$nas_mount" ]] && nas_mount="/data/nas"
+
+sudo mount -v -t cifs -o credentials=$HOME/.secrets/nas-credentials.txt,vers=1.0 //badger-nas/share $nas_mount
