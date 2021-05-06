@@ -64,7 +64,7 @@ secret=0
 dev=0
 user_path=0
 if [ -z $SECRET_PATH ] ; then
-    secret_path='~/.ssh'
+    secret_path=$HOME/.ssh
 else
     secret_path=$SECRET_PATH
 fi
@@ -134,7 +134,14 @@ fi
 if [ $secret -eq 1 ] || [ $dev -eq 1 ] ; then
     id_file=${secret_path}/barkey
 else
-    id_file=${secret_path}/id_rsa-$(hostname)-github
+    if [[ -e ${secret_path}/id_ed25519-$(hostname)-github ]] ; then
+        id_file=${secret_path}/id_ed25519-$(hostname)-github
+    elif [[ -e ${secret_path}/id_rsa-$(hostname)-github ]] ; then
+        id_file=${secret_path}/id_rsa-$(hostname)-github
+    else
+        echo 'Identity File not found'
+        exit 1
+    fi
 fi
 
 zshell=0
