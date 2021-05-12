@@ -1,1 +1,1 @@
-host -l badger-technologies.com | grep $1
+host -l badger-technologies.com ns.badger-technologies.com | grep $1
