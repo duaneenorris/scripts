@@ -22,7 +22,7 @@ function valid_ip()
 }
 
 function usage() {
-    echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] <n>"
+    echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] [-v] <n>"
     echo ""
     echo "Options:"
     echo " -h Display this help message"
@@ -30,6 +30,7 @@ function usage() {
     echo " -s Use barkey for authentication (core; port 2222)"
     echo " -k Use barkey for authentication (classic; port 22)"
     echo " -p login to payload instead of truck (port 3022 or 3222)"
+    echo " -v verbose"
     echo " n = bar<n> or IP address"
     echo ""
     echo " Examples:"
@@ -63,13 +64,9 @@ payload=0
 secret=0
 dev=0
 user_path=0
-if [ -z $SECRET_PATH ] ; then
-    secret_path=$HOME/.ssh
-else
-    secret_path=$SECRET_PATH
-fi
+verbose=0
 
-while getopts ":hpskd:" opt; do
+while getopts ":hpskvd:" opt; do
   case $opt in
     d)
         user_path=1
@@ -109,7 +106,11 @@ while getopts ":hpskd:" opt; do
           fi
         fi
         shift $((OPTIND-1))
-      ;;
+        ;;
+    v)
+        verbose=1
+        shift $((OPTIND-1))
+        ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
         usage
@@ -134,12 +135,13 @@ fi
 if [ $secret -eq 1 ] || [ $dev -eq 1 ] ; then
     id_file=${secret_path}/barkey
 else
+    secret_path=$HOME/.ssh
     if [[ -e ${secret_path}/id_ed25519-$(hostname)-github ]] ; then
         id_file=${secret_path}/id_ed25519-$(hostname)-github
     elif [[ -e ${secret_path}/id_rsa-$(hostname)-github ]] ; then
         id_file=${secret_path}/id_rsa-$(hostname)-github
     else
-        echo 'Identity File not found'
+        echo 'Identity File not found in path '${secret_path}
         exit 1
     fi
 fi
@@ -178,6 +180,9 @@ uds_addr=$(mktemp --dry-run $XDG_RUNTIME_DIR/ssh-agent-XXXXXX)
 git_email=$(sed -n -e 's/^\s\+email\s\?=\s\?//p' < ~/.gituser)
 git_name=$(sed -n -e 's/^\s\+name\s\?=\s\?//p' < ~/.gituser | sed -e 's/\s/\\ /')
 
+if [ $verbose -eq 1 ] ; then
+    set -x
+fi
 exec ssh-agent -a $uds_addr ssh ${options} -p${port} -l bar \
     -o IdentityFile=$id_file -o AddKeysToAgent=yes -l bar ${host} \
     GIT_AUTHOR_EMAIL="${git_email}" \
@@ -187,3 +192,5 @@ exec ssh-agent -a $uds_addr ssh ${options} -p${port} -l bar \
     EDITOR=emacs \
     TERM=screen-256color \
     ${shell} ;
+
+set +x
