@@ -58,7 +58,6 @@ function usage() {
     exit 1
 }
 
-
 prod=0
 payload=0
 secret=0
@@ -71,11 +70,9 @@ while getopts ":hpskvd:" opt; do
     d)
         user_path=1
         secret_path=$OPTARG
-        shift $((OPTIND-1))
       ;;
     p)
         payload=1
-        shift $((OPTIND-1))
       ;;
     s)
         if [ $dev -eq 1 ] ; then
@@ -90,7 +87,6 @@ while getopts ":hpskvd:" opt; do
               secret_path=$SECRET_PATH
           fi
         fi
-        shift $((OPTIND-1))
       ;;
     k)
         if [ $prod -eq 1 ] ; then
@@ -105,11 +101,9 @@ while getopts ":hpskvd:" opt; do
               secret_path=$SECRET_PATH
           fi
         fi
-        shift $((OPTIND-1))
         ;;
     v)
         verbose=1
-        shift $((OPTIND-1))
         ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
@@ -120,6 +114,7 @@ while getopts ":hpskvd:" opt; do
       ;;
   esac
 done
+shift $((OPTIND-1))
 
 if [ -z "$1" ] ; then
     usage
