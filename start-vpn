@@ -29,5 +29,5 @@ while getopts ":hi:v:" opt; do
 done
 shift $((OPTIND-1))
 
-echo openvpn --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
+echo openvpn --auth-nocache --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
 sudo openvpn --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
