@@ -1,9 +1,12 @@
 #!/bin/bash
 
 function usage() {
-    echo "Usage:  start-<xxxx>-vpn [-i[timeout]]"
+    echo "Usage:  start-vpn [-v vpn_name] [-i[timeout]]"
     echo " -h Display this help message"
+    echo " -v vpn_name default=badger"
     echo " -i inactive timeout default=300 sec"
+    echo ""
+    echo " vpn_name should match the <vpn_name>.ovpn and <vpn_name>.up files."
     exit 1
 }
 
