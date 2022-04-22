@@ -1,8 +1,9 @@
 #!/bin/bash
 
 function usage() {
-    echo "Usage:  start-vpn [-v vpn_name] [-i[timeout]]"
+    echo "Usage:  start-vpn [-d directory][-v vpn_name][-i[timeout]]"
     echo " -h Display this help message"
+    echo " -d directory to look for .ovpn and .up files. default=~/badger-vpn."
     echo " -v vpn_name default=badger"
     echo " -i inactive timeout default=300 sec"
     echo ""
@@ -13,14 +14,17 @@ function usage() {
 inactive=300
 vpn_name='badger'
 
-while getopts ":hi:v:" opt; do
+while getopts ":hi:v:d:" opt; do
   case $opt in
     i)
         inactive=$OPTARG
       ;;
     v)
         vpn_name=$OPTARG
-      ;;
+        ;;
+    d)
+        directory=$OPTARG
+        ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
         usage
@@ -32,5 +36,7 @@ while getopts ":hi:v:" opt; do
 done
 shift $((OPTIND-1))
 
-echo openvpn --auth-nocache --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
-sudo openvpn --config ~/badger-vpn/"$vpn_name".ovpn --auth-user-pass ~/badger-vpn/"$vpn_name".up --inactive $inactive 20000
+[[ -z "$directory" ]] && directory="${HOME}/badger-vpn"
+
+echo openvpn --auth-nocache --config "$directory"/"$vpn_name".ovpn --auth-user-pass "$directory"/"$vpn_name".up --inactive $inactive 20000
+sudo openvpn --config "$directory"/"$vpn_name".ovpn --auth-user-pass "$directory"/"$vpn_name".up --inactive $inactive 20000
