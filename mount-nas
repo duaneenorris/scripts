@@ -3,4 +3,4 @@
 nas_mount=$1
 [[ -z "$nas_mount" ]] && nas_mount="/data/nas"
 
-sudo mount -v -t cifs -o credentials=$HOME/.secrets/nas-credentials.txt,vers=1.0 //badger-nas/share $nas_mount
+sudo mount -v -t cifs -o auto,user,intr,soft,dir_mode=0777,file_mode=0666,noperm,nosetuids,credentials=$HOME/.secrets/nas-credentials.txt,vers=1.0 //badger-nas/share $nas_mount
