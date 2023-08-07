@@ -25,12 +25,13 @@ function usage() {
     echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] [-v] <n>"
     echo ""
     echo "Options:"
-    echo " -h Display this help message"
-    echo " -d Use <path> for keys *see notes*"
-    echo " -s Use barkey for authentication (core; port 2222)"
-    echo " -k Use barkey for authentication (classic; port 22)"
-    echo " -p login to payload instead of truck (port 3022 or 3222)"
-    echo " -v verbose"
+    echo " -h, --help         Display this help message"
+    echo " -d, --key_path     Use <path> for keys *see notes*"
+    echo " -s, --secret       Use barkey for authentication (core; port 2222)"
+    echo " -k, --classic      Use barkey for authentication (classic; port 22)"
+    echo " -p, --payload      Login to payload instead of truck (port 3022 or 3222)"
+    echo " -v, --verbose      Verbose"
+    echo " -c, --nosshchecks  Use -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
     echo " n = bar<n> or IP address"
     echo ""
     echo " Examples:"
@@ -64,17 +65,25 @@ secret=0
 dev=0
 user_path=0
 verbose=0
+ssh_checks=""
 
-while getopts ":hpskvd:" opt; do
-  case $opt in
-    d)
+short_opts="chpskvd:"
+long_opts="help,payload,secret,classic,key_path:,nosshchecks,verbose"
+PARSED_ARGS=$(getopt -a --name "$(basename $0)" --options="${short_opts}" --longoptions="${long_opts}" -- "$@") || usage
+eval set -- "$PARSED_ARGS"
+while true; do
+  case "$1" in
+    -c|--nosshchecks)  ssh_checks="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+        ;;
+    -d|--key_path)
         user_path=1
-        secret_path=$OPTARG
+        secret_path="$2"
+        shift
       ;;
-    p)
+    -p|--payload)
         payload=1
       ;;
-    s)
+    -s|--secret)
         if [ $dev -eq 1 ] ; then
             usage
         fi
@@ -88,7 +97,7 @@ while getopts ":hpskvd:" opt; do
           fi
         fi
       ;;
-    k)
+    -k|--classic)
         if [ $prod -eq 1 ] ; then
             usage
         fi
@@ -102,19 +111,20 @@ while getopts ":hpskvd:" opt; do
           fi
         fi
         ;;
-    v)
+    -v|--verbose)
         verbose=1
         ;;
-    \?)
-        echo "Invalid option: -$OPTARG" >&2
+    -h|--help)
         usage
+        return
       ;;
-    h)
-      usage
+    --)
+        shift
+        break
       ;;
   esac
+  shift
 done
-shift $((OPTIND-1))
 
 if [ -z "$1" ] ; then
     usage
@@ -179,7 +189,7 @@ if [ $verbose -eq 1 ] ; then
     set -x
 fi
 exec ssh-agent -a $uds_addr ssh ${options} -p${port} -l bar \
-    -o IdentityFile=$id_file -o AddKeysToAgent=yes -l bar ${host} \
+    -o IdentityFile=$id_file -o AddKeysToAgent=yes ${ssh_checks} -l bar ${host} \
     GIT_AUTHOR_EMAIL="${git_email}" \
     GIT_COMMITTER_EMAIL="${git_email}" \
     GIT_AUTHOR_NAME="${git_name}" \
