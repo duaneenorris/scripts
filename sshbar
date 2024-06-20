@@ -22,7 +22,7 @@ function valid_ip()
 }
 
 function usage() {
-    echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] [-v] <n>"
+    echo "Usage:  sshbar [-d <path>] [-s | -k] [-p] [-h] [-v] <destination>"
     echo ""
     echo "Options:"
     echo " -h, --help         Display this help message"
@@ -32,7 +32,9 @@ function usage() {
     echo " -p, --payload      Login to payload instead of truck (port 3022 or 3222)"
     echo " -v, --verbose      Verbose"
     echo " -c, --nosshchecks  Use -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-    echo " n = bar<n> or IP address"
+    echo " --no-discover      Don't ping the destination or try to find it on the network"
+    echo ""
+    echo " destination can be robot number (bar<destination>), IP address, or a host."
     echo ""
     echo " Examples:"
     echo " sshbar 672"
@@ -66,9 +68,10 @@ dev=0
 user_path=0
 verbose=0
 ssh_checks=""
+discover=1
 
 short_opts="chpskvd:"
-long_opts="help,payload,secret,classic,key_path:,nosshchecks,verbose"
+long_opts="help,payload,secret,classic,key_path:,nosshchecks,verbose,no-discover"
 PARSED_ARGS=$(getopt -a --name "$(basename $0)" --options="${short_opts}" --longoptions="${long_opts}" -- "$@") || usage
 eval set -- "$PARSED_ARGS"
 while true; do
@@ -114,6 +117,9 @@ while true; do
     -v|--verbose)
         verbose=1
         ;;
+    --no-discover)
+        discover=0
+        ;;
     -h|--help)
         usage
         return
@@ -133,8 +139,20 @@ fi
 host="${@: -1}"
 if valid_ip ${@: -1}; then
     host="${@: -1}"
-elif [[ ${host} =~ ^[0-9]+$ ]]; then
-    host=bar${host};
+elif [[ discover -eq 0 ]]; then
+    host="${@: -1}"
+elif ping -c 1 -W 1 bar${host} > /dev/null 2>&1 ; then
+    host=bar${host}
+elif ! ping -c 1 -W 1 ${host} > /dev/null 2>&1 ; then
+    if [[ ! ${host} =~ ^[0-9]+$ && ! ${host} =~ ^bar[0-9]+$ ]] ; then
+        echo "Bad hostname ${host}"
+        exit 1
+    fi
+    host=$(host -l badger-technologies.com ns.badger-technologies.com | grep ${host#bar} | sed 's/.*address //')
+    if [[ "${host}" == "" ]]; then
+        echo "Unable to find host $1"
+        exit 1
+    fi
 fi
 
 if [ $secret -eq 1 ] || [ $dev -eq 1 ] ; then
